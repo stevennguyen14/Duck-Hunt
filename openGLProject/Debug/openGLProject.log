@@ -1,0 +1,7 @@
+﻿  glad.c
+  main.cpp
+  Shader.cpp
+c:\users\cindyng\documents\duckhunt\openglproject\shader.cpp(37): warning C4101: 'success': unreferenced local variable
+  Generating Code...
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  openGLProject.vcxproj -> C:\Users\Cindyng\Documents\DuckHunt\Debug\openGLProject.exe
