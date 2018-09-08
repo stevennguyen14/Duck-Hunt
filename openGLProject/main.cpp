@@ -5,6 +5,9 @@
 #include <sstream>//string stream
 #include "Shader.h"
 
+#define STB_IMAGE_IMPLEMENTATION 
+#include "stb_image.h"
+
 using namespace std;
 
 //just testing if this works with github
@@ -168,12 +171,93 @@ void main()
 		1, 2, 3 // second triangle
 	};
 
-	float rainbowTriangleVertices[] = {
-		//x    y      z       //r    g    b
-		0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
-		0.0f, 0.5f, 0.0f,    0.0f, 0.0f, 1.0f
+	float colourRectVertices[] = {
+		// positions // colors // texture coords
+		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f // top left 
 	};
+
+	//STORE vertices in a VBO
+	unsigned int textureRectVBO;
+	glGenBuffers(1, &textureRectVBO);
+	//CREATE EBO TO STORE CONNECTION INDEXES
+	unsigned int textureRectEBO;
+	glGenBuffers(1, &textureRectEBO);
+	//CREATE VAO TO STORE OPERATIONS ON VBO
+	unsigned int textureRectVAO;
+	glGenVertexArrays(1, &textureRectVAO);
+	//to work with this VAO bind it to make it the current one
+	glBindVertexArray(textureRectVAO);
+	//bind the buffer object to this vao
+	glBindBuffer(GL_ARRAY_BUFFER, textureRectVBO);
+	//give data to vbo
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colourRectVertices), colourRectVertices, GL_STATIC_DRAW);
+
+	//bind elemental buffer object to this vao
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, textureRectEBO);
+	//give indices to ebo
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	//tell VAO which part of the VBO is for location = 0 of our vertex shader
+	//Position(x,y,z)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	//onto location = 1;
+	//colour(r,g,b)
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	//last, locatino = 2
+	//Texture coordinate(S, T)
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	//unbind our VAO
+	glBindVertexArray(0);
+
+	//generate a texture in gpu, return id
+	unsigned int texture1ID;
+	glGenTextures(1, &texture1ID);
+	//we bind the texture to make it the one we're working on
+	glBindTexture(GL_TEXTURE_2D, texture1ID);
+	//set wrapping options(repeat texture if texture coordinates don't fully cover polygons)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);//wrap on the s(x) axis
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); //wraps on the t(y) axis
+																  //set filtering options
+																  //suggestion user nearest neighbour for pixel art, use bilinear for prettu much everything else
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //GL_LINEAR(bilinear) or GL_NEAREST for shrinking
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //for stretching
+
+																	  //LOAD UP IMAGE FILE (JPEG FIRST)
+	int width, height, numberChannels; //as we load an image, we'll get values from it to fill then in
+	unsigned char *image1Data = stbi_load("duckhunt.png", &width, &height, &numberChannels, 0);
+	//if it loaded
+	if (image1Data) {
+		std::cout << "Success! Image is " << width << " by " << height << " pixels" << std::endl;
+		//Lets associate our texture with this image data
+		//params:
+		//texture type
+		//0= mipmap level(if you want to set manually, zero = nah)
+		//GL_RGB = format we want to store the texture data in
+		//width/height = size of texture
+		//0 = must always be zero, some legacy shit
+		//GL_RGB = if jpg, its considered RGB
+		//GL_UNSIGNED_BYTE = how the data has been loaded up for image1Data (unsigned char, char = byte)
+		//data = out image data
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image1Data);
+		//note: above tells openGL how to take something from ram and store it in vram against our textureID
+
+		//generate mipmaps for this texture
+		glGenerateMipmap(GL_TEXTURE_2D);
+		//generates a bunch of smaller version fo the texture to be used at great distance so save on processing
+	}
+	else {
+		std::cout << "Image load failed" << std::endl;
+	}
+
+	//cleanup image memory
+	stbi_image_free(image1Data);
 
 	//generate vertex buffer objects in our GPU to store our vertices
 	//if we only need 1
@@ -186,10 +270,6 @@ void main()
 	//vbo for rect
 	unsigned int VBO2;
 	glGenBuffers(1, &VBO2);
-
-	//vbo for rainbow triangle
-	unsigned int VBO3;
-	glGenBuffers(1, &VBO3);
 
 	//Elemental Buffer Object
 	//we're going to use this thing to hold the indices values to help describe
@@ -205,10 +285,6 @@ void main()
 	//VAO2 was for rect
 	unsigned int VAO2;
 	glGenVertexArrays(1, &VAO2);
-
-	//VAO3 for rainbow triangle VBO3
-	unsigned int VAO3;
-	glGenVertexArrays(1, &VAO3);
 
 	//to start binding data to our VAO, we have to make our VAO active by binding it first
 	glBindVertexArray(VAO);
@@ -252,23 +328,6 @@ void main()
 		glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
 
-	//bind VAO
-	glBindVertexArray(VAO3);
-	//things to do with buffer and vertex attributes will be binded to VAO3 now
-		//bind buffer
-		glBindBuffer(GL_ARRAY_BUFFER, VBO3);
-		//give buffer the array of data
-		glBufferData(GL_ARRAY_BUFFER, sizeof(rainbowTriangleVertices), rainbowTriangleVertices, GL_STATIC_DRAW);
-
-		//tell it which parts of our rainbowTriangleVertices array are associated with vertex shaders
-		//location = 0 variable aPos
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-
-		//next, we want to tell it which parts of our array are the colour values to go into location = 1 variable aColour
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
-		glEnableVertexAttribArray(1);
-	glBindVertexArray(0); //unbind the VAO so we dont accidentally mess with our currently binded options
 
 	//GAME LOOP
 	while (!glfwWindowShouldClose(window))
@@ -321,11 +380,6 @@ void main()
 		//	data type of our indices
 		//	starting index in our indices to start building from
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		//LOAD UP VAO3 to draw the sick ass rainbow triangle!!!!!!!.......
-		shaderProgram3.use();
-		glBindVertexArray(VAO3);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		//Input for window
 		glfwPollEvents();
