@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>//string stream
 #include "Shader.h"
+#include "Menu.h"
+
 
 using namespace std;
 
@@ -82,6 +84,9 @@ void main()
 		//when it resizes
 	glfwSetFramebufferSizeCallback(window, windowResizeCallBack);
 
+
+	//========================================================
+	/*
 	Shader shaderProgram1("vertexShader1.txt", "fragmentShader1.txt");
 	Shader shaderProgram2("vertexShader2.txt", "fragmentShader2.txt");
 	Shader shaderProgram3("vertexShader3.txt", "fragmentShader3.txt");
@@ -270,6 +275,12 @@ void main()
 		glEnableVertexAttribArray(1);
 	glBindVertexArray(0); //unbind the VAO so we dont accidentally mess with our currently binded options
 
+	*/
+	//================================================================================
+	
+	Menu menu;
+	bool showMenu;
+
 	//GAME LOOP
 	while (!glfwWindowShouldClose(window))
 	{
@@ -284,6 +295,15 @@ void main()
 		//clear screen
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		//displays menu
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+			showMenu = false;
+		if (showMenu)
+			menu.displayMenu();
+
+
+		//======================================
+		/*
 		//LETS DRAW THE DAMN TRIANGLE!!!
 		//1.tell it which shader program to use
 		//glUseProgram(shaderProgramID);
@@ -326,6 +346,9 @@ void main()
 		shaderProgram3.use();
 		glBindVertexArray(VAO3);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
+		*/
+		//==========================================
+
 
 		//Input for window
 		glfwPollEvents();
@@ -336,6 +359,7 @@ void main()
 		showFPS(window);
 	}
 
+	/*
 	//optional: de-allocate all resources
 	glDeleteVertexArrays(1, &VAO);//params: how many, thing with ids(unsigned int, or array of)
 	glDeleteVertexArrays(1, &VAO2);
@@ -343,7 +367,7 @@ void main()
 	glDeleteBuffers(1, &VBO2);
 	glDeleteBuffers(1, &EBO);
 	//glDeleteBuffers(2, VBOs); //example of deleting 2 VBO ids from the VBOs array
-
+	*/
 
 	glfwTerminate();
 }
