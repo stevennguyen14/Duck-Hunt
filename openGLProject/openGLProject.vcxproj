@@ -40,8 +40,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\ADV. Game Engine\glad + glfw\glad\include;C:\ADV. Game Engine\glad + glfw\glfw\include;C:\ADV. Game Engine\glm-0.9.9.0\glm;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\ADV. Game Engine\glad + glfw\glfw\lib-vc2015;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\glad\include;C:\glfw\include;C:\glm-0.9.9.0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\glfw\lib-vc2015;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

@@ -279,7 +279,7 @@ void main()
 	//================================================================================
 	
 	Menu menu;
-	bool showMenu;
+	bool showMenu = true;
 
 	//GAME LOOP
 	while (!glfwWindowShouldClose(window))
@@ -298,7 +298,7 @@ void main()
 		//displays menu
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 			showMenu = false;
-		if (showMenu)
+		if (showMenu == true)
 			menu.displayMenu();
 
 

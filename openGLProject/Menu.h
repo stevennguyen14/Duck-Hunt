@@ -23,4 +23,5 @@ public:
 	void displayMenu();
 };
 
+unsigned int loadTexture(char const * path);
 

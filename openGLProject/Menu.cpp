@@ -6,13 +6,50 @@
 Menu::Menu()
 {
 	background();
-	logo();
-	text();
+	//logo();
+	//text();
 }
 
 
 Menu::~Menu()
 {
+}
+
+unsigned int loadTexture(char const * path)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+
+	int width, height, nrComponents;
+	unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		GLenum format;
+		if (nrComponents == 1)
+			format = GL_RED;
+		else if (nrComponents == 3)
+			format = GL_RGB;
+		else if (nrComponents == 4)
+			format = GL_RGBA;
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
+	}
+
+	return textureID;
 }
 
 // load up background image
@@ -57,7 +94,7 @@ void Menu::background() {
 	glBindVertexArray(0);
 
 	
-	glGenTextures(1, &backgroundID);
+	/*glGenTextures(1, &backgroundID);
 	
 	//bind texture to work on
 	glBindTexture(GL_TEXTURE_2D, backgroundID);
@@ -73,7 +110,7 @@ void Menu::background() {
 	unsigned char *BGImage = stbi_load("background.png", &width, &height, &channelCount, 0);
 	if (BGImage) {
 		//GIvE THE TEXTURE UN OUR GRAOHICS CARD THE DATA FROM THE PNG FILE
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, BGImage);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BGImage);
 		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BGImage);
 		//generate mipmaps for this texture 
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -82,7 +119,8 @@ void Menu::background() {
 		cout << "failed to load background.png" << endl;
 	}
 	//free image data from ram because thers a copy in the texture
-	stbi_image_free(BGImage);
+	stbi_image_free(BGImage);*/
+	backgroundID = loadTexture("background.png");
 }
 
 //=======================================================
@@ -163,13 +201,13 @@ void Menu::logo() {
 void Menu::text() {
 	float rectVertices[] = {
 		//first triangle
-		0.5f, 0.5f, 0.0f,//top right
-		0.5f, -1.0f, 0.0f, //bottom right
+		-0.5f, 0.5f, 0.0f,//top right
+		-1.0f, -0.5f, 0.0f, //bottom right
 		//-0.5f, 0.5f, 0.0f, //top left
 		//second triangle
 		// 0.5f, -0.5f, 0.0f, //bottom right
-		-0.5f, -1.0f, 0.0f, //bottom left
-		-0.5f, 0.5f, 0.0f //top left
+		-1.0f, -0.5f, 0.0f, //bottom left
+		-0.5f, -0.5f, 0.0f //top left
 	};
 
 	unsigned int indices[] = {
@@ -246,6 +284,7 @@ void Menu::displayMenu() {
 	glBindTexture(GL_TEXTURE_2D, backgroundID);
 	//draw thing
 	glUniform1i(glGetUniformLocation(shaderProgram4.ID, "texture"), 0);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	//===========================================
 
@@ -253,13 +292,14 @@ void Menu::displayMenu() {
 	//set shader for first thing you want to draw
 	shaderProgram4.use();
 	//bind VAO
-	glBindVertexArray(backgroundVAO);
+	glBindVertexArray(logoVAO);
 	//setup uniforms (mostly textures at this stage)
 	//set texture uniforms: tell each texture uniform which texture slot to use
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, backgroundID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, logoID);
 	//draw thing
-	glUniform1i(glGetUniformLocation(shaderProgram4.ID, "texture"), 0);
+	glUniform1i(glGetUniformLocation(shaderProgram4.ID, "texture"), 1);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	//=======================================
 
@@ -267,14 +307,12 @@ void Menu::displayMenu() {
 	//set shader for first thing you want to draw
 	shaderProgram4.use();
 	//bind VAO
-	glBindVertexArray(backgroundVAO);
+	glBindVertexArray(textVAO);
 	//setup uniforms (mostly textures at this stage)
 	//set texture uniforms: tell each texture uniform which texture slot to use
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, backgroundID);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, textID);
 	//draw thing
-
-
-	//ERIC: cant remember or find exaclty what the string "TEXTURE" relates too
-	glUniform1i(glGetUniformLocation(shaderProgram4.ID, "texture"), 0);
+	glUniform1i(glGetUniformLocation(shaderProgram4.ID, "texture"), 3);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
